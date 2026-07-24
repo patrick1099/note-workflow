@@ -1,0 +1,4 @@
+interface:
+  display_name: "Organize Obsidian Notes"
+  short_description: "Classify topics and organize selected Obsidian notes"
+  default_prompt: "Use $organize-notes to organize the Obsidian notes I select and leave them ready for my acceptance."

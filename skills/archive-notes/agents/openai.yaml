@@ -1,0 +1,4 @@
+interface:
+  display_name: "Archive Obsidian Notes"
+  short_description: "Plan and apply approved folders and note moves safely"
+  default_prompt: "Use $archive-notes to prepare an archive Dry Run for my accepted notes and apply only the actions I approve."

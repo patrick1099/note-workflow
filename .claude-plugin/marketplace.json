@@ -1,0 +1,16 @@
+{
+  "name": "note-workflow",
+  "owner": {
+    "name": "xu"
+  },
+  "metadata": {
+    "description": "笔记整理工作流 Skill 集"
+  },
+  "plugins": [
+    {
+      "name": "note-workflow",
+      "source": ".",
+      "description": "organize-notes、archive-notes、weave-note-links 与 run-note-workflow"
+    }
+  ]
+}

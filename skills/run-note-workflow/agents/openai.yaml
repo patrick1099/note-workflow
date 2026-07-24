@@ -1,0 +1,4 @@
+interface:
+  display_name: "Run the Note Workflow"
+  short_description: "Resume all note stages while preserving human gates"
+  default_prompt: "Use $run-note-workflow to continue the complete workflow for the Obsidian notes I select."

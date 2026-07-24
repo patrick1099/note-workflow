@@ -1,0 +1,18 @@
+{
+  "name": "note-workflow",
+  "version": "0.1.0",
+  "description": "A human-gated Obsidian note workflow for organizing, archiving, and weaving links.",
+  "author": {
+    "name": "xu"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Note Workflow",
+    "shortDescription": "Human-gated organization for Obsidian notes.",
+    "longDescription": "Organize notes, plan archive moves, weave links, and resume the full workflow from durable note state without bypassing human acceptance.",
+    "developerName": "xu",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Run the appropriate note workflow stage for the Obsidian notes I select."
+  }
+}

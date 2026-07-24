@@ -1,0 +1,4 @@
+interface:
+  display_name: "Weave Obsidian Note Links"
+  short_description: "Plan and apply approved semantic links with exact diffs"
+  default_prompt: "Use $weave-note-links to propose useful links for my complete note and apply only the link changes I approve."
