@@ -1,6 +1,6 @@
 {
   "name": "note-workflow",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A human-gated Obsidian note workflow for organizing, archiving, and weaving links.",
   "author": {
     "name": "xu"
