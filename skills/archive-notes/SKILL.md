@@ -15,6 +15,8 @@ Require `complete: true` for every subject note. An explicitly selected note may
 run without `ai_done: true`, but the user must still own the `complete` decision.
 Keep `archive_done: false` while any proposal, dependency, question, or failed
 action remains open.
+Reject subjects under `98-Resources/原稿归档`. Those files are immutable
+pre-polish sources and are not final knowledge-location candidates.
 
 ## Plan
 

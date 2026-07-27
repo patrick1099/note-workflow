@@ -2,6 +2,8 @@
 
 Use this order:
 
+0. Ignore `98-Resources/原稿归档`; it is immutable version provenance, not a
+   destination candidate for polished notes and not a source of archive work.
 1. Keep notes still owned by a concrete task or project under its existing
    `01-任务需求` or `02-项目计划` area.
 2. Move knowledge that remains useful outside a project to `00-知识树`.

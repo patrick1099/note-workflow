@@ -21,6 +21,7 @@ links_done != true
 
 For an explicitly selected complete note, allow standalone use without a prior
 archive round. Never change `complete`.
+Never edit or select a note under `98-Resources/原稿归档`.
 
 ## Analyze
 
@@ -36,6 +37,10 @@ archive round. Never change `complete`.
    action.
 5. If no link is useful, propose an explicit `decision` action so the user can
    confirm that this round intentionally makes no change.
+
+The polished note's footer link to `98-Resources/原稿归档` is provenance, not a
+knowledge relationship. Preserve it as a deliberate one-way link and never
+propose or require a backlink in the archived original.
 
 ## Dry Run
 

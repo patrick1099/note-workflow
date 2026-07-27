@@ -20,6 +20,7 @@ python <plugin-root>/scripts/note_status.py \
 
 Never infer continuation from hidden conversation memory when files are
 available.
+Exclude `98-Resources/原稿归档` from folder and batch subjects.
 
 ## Dispatch
 
@@ -51,6 +52,9 @@ all four booleans are true
     -> complete
 ```
 
+`organize-notes` may replace a source note with a polished note whose title and
+filename changed. After that call, follow its returned target path and re-read
+the polished note; do not route the archived original as another subject.
 Re-read files after every downstream call and after every user response.
 
 ## Human gates

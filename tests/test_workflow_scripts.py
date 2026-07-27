@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -12,6 +13,7 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 ACTION_ENGINE = PLUGIN_ROOT / "scripts" / "action_engine.py"
 NOTE_STATUS = PLUGIN_ROOT / "scripts" / "note_status.py"
+PRESERVE_ORIGINAL = PLUGIN_ROOT / "scripts" / "preserve_original.py"
 
 
 def run_script(script: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -322,6 +324,230 @@ class NoteStatusTests(unittest.TestCase):
             stages = {item["path"]: item["next_stage"] for item in payload}
             self.assertEqual(stages["inbox/a.md"], "waiting_acceptance")
             self.assertEqual(stages["inbox/b.md"], "links")
+
+    def test_skips_preserved_originals(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            originals = root / "98-Resources" / "原稿归档" / "inbox"
+            originals.mkdir(parents=True)
+            (originals / "old.md").write_text("# Old\n", encoding="utf-8")
+            inbox = root / "inbox"
+            inbox.mkdir()
+            (inbox / "new.md").write_text("# New\n", encoding="utf-8")
+
+            inspected = run_script(
+                NOTE_STATUS,
+                "--vault",
+                str(root),
+                "--target",
+                "98-Resources/原稿归档",
+                "--target",
+                "inbox",
+            )
+            self.assertEqual(inspected.returncode, 0, inspected.stderr)
+            payload = json.loads(inspected.stdout)
+            self.assertEqual([item["path"] for item in payload], ["inbox/new.md"])
+
+
+class PreserveOriginalTests(unittest.TestCase):
+    def _plan(
+        self,
+        root: Path,
+        *,
+        source: str,
+        archive: str,
+        target: str,
+        content: str,
+    ) -> Path:
+        source_bytes = root.joinpath(*source.split("/")).read_bytes()
+        plan_path = root / "preserve-plan.json"
+        write_json(
+            plan_path,
+            {
+                "version": 1,
+                "source": source,
+                "source_sha256": hashlib.sha256(source_bytes).hexdigest(),
+                "archive": archive,
+                "target": target,
+                "content": content,
+            },
+        )
+        return plan_path
+
+    def test_preserves_original_and_replaces_same_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            inbox = root / "inbox"
+            inbox.mkdir()
+            source = inbox / "rough.md"
+            original = b"# rough\r\nraw text\r\n"
+            source.write_bytes(original)
+            archive = "98-Resources/原稿归档/inbox/rough.md"
+            content = (
+                "# rough\n\nPolished text.\n\n---\n"
+                "原稿：[[98-Resources/原稿归档/inbox/rough|rough（原稿）]]\n"
+            )
+            plan = self._plan(
+                root,
+                source="inbox/rough.md",
+                archive=archive,
+                target="inbox/rough.md",
+                content=content,
+            )
+
+            checked = run_script(
+                PRESERVE_ORIGINAL,
+                "check",
+                "--vault",
+                str(root),
+                "--plan",
+                str(plan),
+            )
+            self.assertEqual(checked.returncode, 0, checked.stderr)
+            self.assertEqual(source.read_bytes(), original)
+
+            applied = run_script(
+                PRESERVE_ORIGINAL,
+                "apply",
+                "--vault",
+                str(root),
+                "--plan",
+                str(plan),
+            )
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            self.assertEqual(
+                root.joinpath(*archive.split("/")).read_bytes(),
+                original,
+            )
+            self.assertEqual(source.read_text(encoding="utf-8"), content)
+
+    def test_can_correct_title_and_filename(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            inbox = root / "inbox"
+            inbox.mkdir()
+            source = inbox / "wrong.md"
+            source.write_text("# Wrong\nraw\n", encoding="utf-8")
+            archive = "98-Resources/原稿归档/inbox/wrong.md"
+            content = (
+                "# Accurate title\n\nStructured.\n\n---\n"
+                "原稿：[[98-Resources/原稿归档/inbox/wrong|wrong（原稿）]]\n"
+            )
+            plan = self._plan(
+                root,
+                source="inbox/wrong.md",
+                archive=archive,
+                target="inbox/Accurate title.md",
+                content=content,
+            )
+
+            applied = run_script(
+                PRESERVE_ORIGINAL,
+                "apply",
+                "--vault",
+                str(root),
+                "--plan",
+                str(plan),
+            )
+            self.assertEqual(applied.returncode, 0, applied.stderr)
+            self.assertFalse(source.exists())
+            self.assertTrue((inbox / "Accurate title.md").is_file())
+
+    def test_rejects_missing_source_link_without_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            inbox = root / "inbox"
+            inbox.mkdir()
+            source = inbox / "rough.md"
+            original = b"# rough\nraw\n"
+            source.write_bytes(original)
+            plan = self._plan(
+                root,
+                source="inbox/rough.md",
+                archive="98-Resources/原稿归档/inbox/rough.md",
+                target="inbox/rough.md",
+                content="# rough\n\nPolished but unlinked.\n",
+            )
+
+            applied = run_script(
+                PRESERVE_ORIGINAL,
+                "apply",
+                "--vault",
+                str(root),
+                "--plan",
+                str(plan),
+            )
+            self.assertEqual(applied.returncode, 2)
+            self.assertIn("必须链接原稿", applied.stderr)
+            self.assertEqual(source.read_bytes(), original)
+            self.assertFalse((root / "98-Resources").exists())
+
+    def test_rejects_source_drift_without_writes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            inbox = root / "inbox"
+            inbox.mkdir()
+            source = inbox / "rough.md"
+            source.write_text("# rough\nraw\n", encoding="utf-8")
+            archive = "98-Resources/原稿归档/inbox/rough.md"
+            plan = self._plan(
+                root,
+                source="inbox/rough.md",
+                archive=archive,
+                target="inbox/rough.md",
+                content=(
+                    "# rough\n\nPolished.\n\n---\n"
+                    "原稿：[[98-Resources/原稿归档/inbox/rough]]\n"
+                ),
+            )
+            source.write_text("# rough\nuser changed it\n", encoding="utf-8")
+
+            applied = run_script(
+                PRESERVE_ORIGINAL,
+                "apply",
+                "--vault",
+                str(root),
+                "--plan",
+                str(plan),
+            )
+            self.assertEqual(applied.returncode, 2)
+            self.assertIn("原稿已变化", applied.stderr)
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                "# rough\nuser changed it\n",
+            )
+            self.assertFalse(root.joinpath(*archive.split("/")).exists())
+
+    def test_rejects_windows_reserved_target_name(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            inbox = root / "inbox"
+            inbox.mkdir()
+            source = inbox / "rough.md"
+            original = b"# rough\nraw\n"
+            source.write_bytes(original)
+            plan = self._plan(
+                root,
+                source="inbox/rough.md",
+                archive="98-Resources/原稿归档/inbox/rough.md",
+                target="inbox/CON.md",
+                content=(
+                    "# CON\n\nPolished.\n\n---\n"
+                    "原稿：[[98-Resources/原稿归档/inbox/rough]]\n"
+                ),
+            )
+
+            applied = run_script(
+                PRESERVE_ORIGINAL,
+                "apply",
+                "--vault",
+                str(root),
+                "--plan",
+                str(plan),
+            )
+            self.assertEqual(applied.returncode, 2)
+            self.assertIn("Windows 保留名", applied.stderr)
+            self.assertEqual(source.read_bytes(), original)
 
 
 if __name__ == "__main__":

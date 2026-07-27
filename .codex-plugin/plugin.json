@@ -1,7 +1,7 @@
 {
   "name": "note-workflow",
-  "version": "0.1.1",
-  "description": "A human-gated Obsidian note workflow for organizing, archiving, and weaving links.",
+  "version": "0.2.0",
+  "description": "A human-gated Obsidian workflow with selective polishing, preserved originals, archiving, and link weaving.",
   "author": {
     "name": "xu"
   },
@@ -9,7 +9,7 @@
   "interface": {
     "displayName": "Note Workflow",
     "shortDescription": "Human-gated organization for Obsidian notes.",
-    "longDescription": "Organize notes, plan archive moves, weave links, and resume the full workflow from durable note state without bypassing human acceptance.",
+    "longDescription": "Read and classify notes, selectively create polished replacements while preserving originals, plan archive moves, weave links, and resume from durable state without bypassing human acceptance.",
     "developerName": "xu",
     "category": "Productivity",
     "capabilities": [],

@@ -11,6 +11,8 @@ The July 2026 comparison found adjacent Obsidian tools:
 Keep this plugin focused on the remaining distinctive contract:
 
 - Durable four-property state stored in each note.
+- Full-read selective polishing with byte-preserved originals and one-way
+  provenance links.
 - Separate organization, archive, and semantic-link skills.
 - User-only `complete` and per-action approvals.
 - Exact executable Dry Runs with file-drift rejection.

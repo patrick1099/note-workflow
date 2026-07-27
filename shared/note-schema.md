@@ -53,3 +53,13 @@ Reset downstream state when upstream facts become invalid:
   rearchiving.
 
 Do not add `workflow_done`.
+
+## Preserved originals
+
+`98-Resources/原稿归档` contains byte-preserved source notes created by
+`organize-notes`. Files below this root are not workflow subjects and must not
+be assigned or advanced through the four durable states.
+
+The polished working note stays in the original parent folder. Its footer links
+one-way to the archived original. That provenance link does not make the
+original a `weave-note-links` subject and does not require a backlink.

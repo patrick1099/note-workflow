@@ -9,6 +9,10 @@ Use these relationship labels:
   risk.
 - `普通相关`: a useful relation without one of the stronger directions.
 
+The footer link from a polished note to `98-Resources/原稿归档` is version
+provenance, not one of these semantic relationships. Keep it one-way and never
+edit the archived original.
+
 Place each link in this order:
 
 1. Convert an existing natural term into a Wiki link.

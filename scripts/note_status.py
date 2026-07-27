@@ -14,6 +14,7 @@ from typing import Any
 
 DRIVE_RE = re.compile(r"^[A-Za-z]:")
 SKIP_DIRS = {".git", ".obsidian", ".trash", ".note-workflow-backups"}
+ORIGINAL_ARCHIVE_PARTS = ("98-Resources", "原稿归档")
 STATE_KEYS = {
     "ai_done",
     "complete",
@@ -121,6 +122,15 @@ def _iter_markdown(target: Path) -> list[Path]:
     return sorted(result, key=lambda item: item.as_posix().lower())
 
 
+def _is_preserved_original(root: Path, path: Path) -> bool:
+    relative_parts = path.relative_to(root).parts
+    prefix = tuple(
+        part.casefold() for part in relative_parts[: len(ORIGINAL_ARCHIVE_PARTS)]
+    )
+    expected = tuple(part.casefold() for part in ORIGINAL_ARCHIVE_PARTS)
+    return prefix == expected
+
+
 def inspect(root: Path, targets: list[str]) -> list[dict[str, Any]]:
     notes: dict[str, dict[str, Any]] = {}
     for target_value in targets:
@@ -128,6 +138,8 @@ def inspect(root: Path, targets: list[str]) -> list[dict[str, Any]]:
         if target == root:
             raise StatusError("不得默认扫描整个 Vault；请指定笔记或子文件夹")
         for path in _iter_markdown(target):
+            if _is_preserved_original(root, path):
+                continue
             text = _decode(path)
             if _is_generated_report(text):
                 continue
