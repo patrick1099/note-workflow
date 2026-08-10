@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "note-workflow",
   "displayName": "笔记整理工作流",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "支持原稿保留式按需润色、人工验收和逐项 Dry Run 审批的 Obsidian 笔记整理、归档、链接与全流程编排 Skill 集。",
   "author": {
     "name": "xu"

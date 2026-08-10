@@ -42,6 +42,13 @@ report that will later be applied.
 
 Only the user may change report checkboxes or suggestion lines.
 
+Verbal-approval bridge: when the user explicitly approves an action in chat (e.g.
+"执行"、"apply、都做"), the agent may record that approval by ticking the
+corresponding checkbox before `apply`, and must note the approval source in the
+action's `- 建议：` line (e.g. "用户对话批准：<quote>"). This is the only case
+where the agent writes a checkbox. Never treat silence, a non-answer, or an
+unrelated "yes" as approval.
+
 - Execute checked actions through `action_engine.py apply`.
 - Do not execute unchecked actions.
 - If an unchecked action has advice, retain that advice and create a new plan

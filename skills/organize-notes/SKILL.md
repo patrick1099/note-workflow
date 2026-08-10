@@ -35,6 +35,12 @@ copies, not workflow subjects.
    - `preserve_and_polish`: the title is materially inaccurate or misleading,
      or the body needs meaningful cleanup, correction, deduplication, or
      restructuring to become readable and useful.
+
+   Placeholder filenames (`未命名`/`未命名 N`/`Untitled`/`N.md`) are a POSITIVE
+   trigger for `preserve_and_polish`, not a metadata-only case: give the polished
+   note a meaningful title, archive the original byte-for-byte to
+   `98-Resources/原稿归档`, and keep a provenance link. Exception: an empty or
+   near-empty body with no recoverable subject may stay untouched and be reported.
 6. If a missing decision would materially change the result, ask one concrete
    question. In background work, write it to `ai_question`, keep
    `ai_done: false`, and stop that note.

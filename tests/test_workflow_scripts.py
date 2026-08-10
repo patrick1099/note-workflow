@@ -349,6 +349,58 @@ class NoteStatusTests(unittest.TestCase):
             self.assertEqual([item["path"] for item in payload], ["inbox/new.md"])
 
 
+class ConsistencyCheckTests(unittest.TestCase):
+    def test_flags_fake_done_and_placeholders(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            # 根目录 complete+archive_done=true 但未归位
+            (root / "未命名.md").write_text(
+                "---\nai_done: true\ncomplete: true\n"
+                "archive_done: true\nlinks_done: true\nkind: design\n---\n# X\n",
+                encoding="utf-8",
+            )
+            # 占位名 + 缺 kind
+            (root / "未命名 1.md").write_text(
+                "---\nai_done: true\ncomplete: true\n"
+                "archive_done: true\nlinks_done: true\n---\n# Y\n",
+                encoding="utf-8",
+            )
+            # 干净笔记：已归位、占位名之外、有 kind
+            moved = root / "00-知识树" / "good.md"
+            moved.parent.mkdir(parents=True)
+            moved.write_text(
+                "---\nai_done: true\ncomplete: true\n"
+                "archive_done: true\nlinks_done: true\nkind: knowledge\n---\n# Good\n",
+                encoding="utf-8",
+            )
+
+            checked = run_script(
+                PLUGIN_ROOT / "scripts" / "consistency_check.py",
+                "--vault",
+                str(root),
+                "--target",
+                "00-知识树",
+            )
+            self.assertEqual(checked.returncode, 0, checked.stderr)
+            payload = json.loads(checked.stdout)
+            self.assertEqual(payload, [])
+
+            # 根目录不能被 normalize rel 当 target，用显式文件逐个扫
+            for name in ("未命名.md", "未命名 1.md"):
+                one = run_script(
+                    PLUGIN_ROOT / "scripts" / "consistency_check.py",
+                    "--vault",
+                    str(root),
+                    "--target",
+                    name,
+                )
+                self.assertEqual(one.returncode, 1)
+                payload = json.loads(one.stdout)
+                self.assertEqual(payload[0]["path"], name)
+                kinds = {item["check"] for item in payload}
+                self.assertIn("placeholder_name", kinds)
+
+
 class PreserveOriginalTests(unittest.TestCase):
     def _plan(
         self,

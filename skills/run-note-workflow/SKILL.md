@@ -59,13 +59,52 @@ Re-read files after every downstream call and after every user response.
 
 ## Human gates
 
-Never set or clear `complete`, tick report checkboxes, treat silence as approval,
-discard suggestions, or auto-approve a later stage because an earlier stage
-succeeded. “Run everything” means automatically choose and resume safe stages;
-it does not remove acceptance or action approval.
+Never set or clear `complete`, treat silence as approval, discard suggestions, or
+auto-approve a later stage because an earlier stage succeeded. In manual approval
+mode, never tick report checkboxes yourself. Under explicit delegation (below),
+ticking the in-scope actions is allowed and required. “Run everything” means
+automatically choose and resume safe stages; it does not remove acceptance or
+action approval unless the user delegates it.
+
+Never set `archive_done` or `links_done` yourself to skip real work. Those flags
+are closed only by the downstream skill's own apply recipe closing real actions.
+Flipping them without executing `archive-notes` / `weave-note-links` produces a
+false "complete" that hides still-scattered or still-placeholder notes.
 
 When pausing, report the stage, note, exact report or property the user should
 edit, and how to resume.
+
+## Delegated execution
+
+A user may grant full automation ("自动完成"、"交给 subagent 全跑"). That grants
+delegation of *decision*, never a license to fake work. When explicitly authorized,
+the orchestrator may, for each stage, tick the in-scope actions in the Dry Run
+report, then apply via `action_engine.py apply`, without a separate manual
+approval step — but it must still do the REAL work:
+
+- organize: real read + kind/topics; placeholder filenames (`未命名`/`Untitled`/`N`)
+  must go through preserve-and-polish (new file + provenance link + archived
+  original), never a silent in-place rename.
+- archive: real location decisions (move/rename/mkdir) via `action_engine.py`.
+- links: real weave via `action_engine.py`.
+
+Non-empty selection gate: tick every applicable action before `apply`. If
+applicable work exists but the selected set is empty, treat the apply as a
+failure and report it — an empty `apply` is a no-op, not a success. Genuinely
+"nothing to do" is only true when the stage verifiably has no applicable actions.
+
+Set `archive_done` / `links_done` only after a successful `apply` whose receipt
+shows the actions executed and whose postconditions hold. Never treat them as a
+selectable "done" action, and never flip them to skip doing the work.
+
+Do not trust the booleans alone: after `apply`, re-check the receipt and the
+actual result (moved target exists, old path gone, planned rename/move/link edits
+present, `failed == 0` and `applied == selected`). On any mismatch, route the
+note to "状态不一致 / 执行失败" instead of continuing to the next stage.
+
+If you cannot reach a real end state (e.g. a decision still outside your
+authorization), leave the note at its current stage and report it instead of
+marking it done.
 
 ## Batch behavior
 
@@ -82,3 +121,14 @@ each note's state independent and end with these groups:
 Do not add `workflow_done`; all four existing booleans already define completion.
 If a downstream skill is unavailable or fails, stop that note and report the
 failure instead of implementing a substitute inside this skill.
+
+Before closing a batch, run the read-only consistency check to catch "marked
+done but work not done" drift:
+
+```text
+python <plugin-root>/scripts/consistency_check.py \
+  --vault <vault-root> --target <...each subject folder...>
+```
+
+Report any findings (root-not-archived, placeholder names, complete-without-kind)
+instead of silently closing the batch.
