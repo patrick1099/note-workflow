@@ -1,4 +1,4 @@
----
+﻿---
 name: archive-notes
 description: Plan and execute human-approved Obsidian folder creation and note moves after the user has accepted a note. Use when complete is true and archive_done is false, when the user asks where a finished note belongs, or when the user asks to resume an archive Dry Run. This skill never rewrites note bodies or creates knowledge links.
 ---
@@ -21,13 +21,18 @@ pre-polish sources and are not final knowledge-location candidates.
 ## Plan
 
 1. Re-read the current Vault tree and the complete note.
-2. Prefer an existing folder. Use the ordered ownership rules in
-   `archive-rules.md`; never map the eight `kind` values to eight folders.
-3. Propose only folder creation, file moves, or a `decision` to keep the current
+2. Read the destination folder's `AGENTS.md` contract if one exists, and apply
+   `archive-rules.md` § Folder discipline (flat-size ceilings, catch-all rules,
+   index duty). A destination at or over its ceiling needs subfolder-split or
+   catch-all-promotion proposals instead of another direct move.
+3. Prefer an existing folder that matches the note's subject. Use the ordered
+   ownership rules in `archive-rules.md`; never map the eight `kind` values to
+   eight folders.
+4. Propose only folder creation, file moves, or a `decision` to keep the current
    location. Do not add links or edit note bodies.
-4. Make every folder and move a separate action with a stable ID, reason,
+5. Make every folder and move a separate action with a stable ID, reason,
    dependencies, and blank suggestion field.
-5. Write a versioned JSON plan to a temporary location and render a new
+6. Write a versioned JSON plan to a temporary location and render a new
    versioned Markdown report through the shared engine:
 
    ```text

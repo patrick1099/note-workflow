@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Read-only consistency checks for the note-workflow durable state.
 
 Flags states that claim completion but are not backed by real work:
@@ -108,8 +108,12 @@ def _iter_markdown(target: Path) -> list[Path]:
     return sorted(result, key=lambda item: item.as_posix().lower())
 
 
+FOLDER_BLOAT_THRESHOLD = 20
+
+
 def check(root: Path, targets: list[str]) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
+    folder_files: dict[str, set[str]] = {}
     for target_value in targets:
         relative = _normalize_rel(target_value)
         target = root.joinpath(*relative.split("/")).resolve(strict=True)
@@ -120,6 +124,9 @@ def check(root: Path, targets: list[str]) -> list[dict[str, Any]]:
             if _is_generated_report(text):
                 continue
             rel = path.relative_to(root).as_posix()
+            folder = "/".join(rel.split("/")[:-1])
+            if folder:
+                folder_files.setdefault(folder, set()).add(rel)
             state = _frontmatter(text)
             complete = state.get("complete") is True
             archive_done = state.get("archive_done") is True
@@ -152,6 +159,18 @@ def check(root: Path, targets: list[str]) -> list[dict[str, Any]]:
                         "detail": "complete=true 但缺 kind",
                     }
                 )
+    for folder, files in sorted(folder_files.items()):
+        if len(files) >= FOLDER_BLOAT_THRESHOLD:
+            findings.append(
+                {
+                    "path": folder,
+                    "check": "folder_bloat",
+                    "detail": (
+                        f"平铺 {len(files)} 篇笔记，超过 {FOLDER_BLOAT_THRESHOLD} 篇容量上限；"
+                        "归档阶段应提议按稳定主题拆子文件夹或建索引，兜底抽屉应提议晋升主题簇"
+                    ),
+                }
+            )
     return findings
 
 

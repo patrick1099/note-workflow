@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import hashlib
 import json
@@ -399,6 +399,29 @@ class ConsistencyCheckTests(unittest.TestCase):
                 self.assertEqual(payload[0]["path"], name)
                 kinds = {item["check"] for item in payload}
                 self.assertIn("placeholder_name", kinds)
+
+
+    def test_flags_folder_bloat(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            folder = root / "00-知识树" / "0_其他"
+            folder.mkdir(parents=True)
+            for i in range(20):
+                (folder / f"n{i:02d}.md").write_text(
+                    "---\nkind: knowledge\n---\n# N\n", encoding="utf-8"
+                )
+            checked = run_script(
+                PLUGIN_ROOT / "scripts" / "consistency_check.py",
+                "--vault",
+                str(root),
+                "--target",
+                "00-知识树",
+            )
+            self.assertEqual(checked.returncode, 1, checked.stderr)
+            payload = json.loads(checked.stdout)
+            bloated = [item for item in payload if item["check"] == "folder_bloat"]
+            self.assertEqual(len(bloated), 1)
+            self.assertEqual(bloated[0]["path"], "00-知识树/0_其他")
 
 
 class PreserveOriginalTests(unittest.TestCase):
