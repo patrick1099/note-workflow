@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Read-only consistency checks for the note-workflow durable state.
 
 Flags states that claim completion but are not backed by real work:

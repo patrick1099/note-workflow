@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "note-workflow",
   "displayName": "笔记整理工作流",

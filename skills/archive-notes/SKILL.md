@@ -1,4 +1,4 @@
-﻿---
+---
 name: archive-notes
 description: Plan and execute human-approved Obsidian folder creation and note moves after the user has accepted a note. Use when complete is true and archive_done is false, when the user asks where a finished note belongs, or when the user asks to resume an archive Dry Run. This skill never rewrites note bodies or creates knowledge links.
 ---

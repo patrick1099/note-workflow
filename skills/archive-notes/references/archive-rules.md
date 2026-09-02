@@ -1,4 +1,4 @@
-﻿# Archive ownership rules
+# Archive ownership rules
 
 Use this order:
 
